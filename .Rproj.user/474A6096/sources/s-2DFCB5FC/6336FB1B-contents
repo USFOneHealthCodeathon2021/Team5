@@ -54,6 +54,7 @@ df3 <- df2 %>%
 ## Coerce data frame to array
 ## In here we unlist a data frame by rows, not columns by using the transpose method, t(dataframe)
 Austin.array <- array(unlist(t(df3)), dim = c(113, 1, 1994))
+
 print(ts1.array[,,1])
 
 print(ts1.array[,,2])
@@ -63,6 +64,17 @@ typeof(ts1.array[,,2])
 class(ts1.array[,,2])
 
 is.vector(ts1.array[,,2])
+
+## Create an xts object#
+
+## for each time serie:
+ ## convert it into a xts class
+ ## pass it into stl method
+ ## I would have returns an object of class "stl" with components time.series
+## a multiple time series with columns seasonal, trend and remainder
+## extract the trend, put into into a result vector. Result vector would have 1994 elements.
+
+
 
 # CLEAN UP #################################################
 
