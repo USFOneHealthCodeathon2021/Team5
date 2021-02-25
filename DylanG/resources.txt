@@ -1,0 +1,6 @@
+-----List of STL Resources-----
+Statsmodel basic usage: https://www.statsmodels.org/devel/examples/notebooks/generated/stl_decomposition.html#Forecasting-with-STL
+Anomaly detection: https://medium.com/wwblog/anomaly-detection-using-stl-76099c9fd5a7
+Time series general: https://otexts.com/fpp2/components.html
+STL decomp: https://otexts.com/fpp2/stl.html
+STL original paper: http://www.wessa.net/download/stl.pdf
