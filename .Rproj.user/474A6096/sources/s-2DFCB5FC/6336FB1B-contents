@@ -65,16 +65,34 @@ class(ts1.array[,,2])
 
 is.vector(ts1.array[,,2])
 
+# Create a daily time series in R from a numeric vector
+
+ts.ts1 <- ts(ts1.array[,,1], start=1, frequency=7)
+
+plot(ts.ts1)
+
+ts.ts1.stl = stl(ts.ts1, s.window= 21)
+
+plot(ts.ts1.stl)
+
+ts.ts2 <- ts(ts1.array[,,2], start=c(2003,2), end=c(2003,6), frequency=365)
+
+plot(ts.ts2)
+
+is.ts(ts.ts1)
 ## Create an xts object#
 
 ## for each time serie:
- ## convert it into a xts class
+ ## convert it into a xts class 
  ## pass it into stl method
  ## I would have returns an object of class "stl" with components time.series
 ## a multiple time series with columns seasonal, trend and remainder
 ## extract the trend, put into into a result vector. Result vector would have 1994 elements.
 
-
+for(i in 1:2){
+  print(ts1.array[,,i])
+}
+  
 
 # CLEAN UP #################################################
 
