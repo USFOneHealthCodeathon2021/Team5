@@ -3,6 +3,7 @@
 # Reference source: Learning R taught by Dr. Poulson on Linked Learning 
 
 # INSTALL AND LOAD PACKAGES ################################
+library(xts)
 
 # Install pacman ("package manager") if needed
 # If there is an error, you can refer to this online material: https://stackoverflow.com/questions/42807247/installing-package-cannot-open-file-permission-denied
@@ -25,6 +26,43 @@ pacman::p_load(pacman, party, rio, tidyverse)
 (df <- read_csv("data/Austin_data.csv"))
 head(df)
 
+# Create a reduce dataset containing only normalized least square variables only
+df2 <- df %>%
+  select(normalized_intensity1:normalized_intensity113
+) %>%
+  print(5)
+
+# FLITER BY ONE VARIABLE ###################################
+
+# Make a copy of df2
+df3 <- df2 %>%
+    print(1)
+
+# # Import CSV files into xts object
+# 
+# df3 <- df %>%
+#   select(normalized_intensity1:normalized_intensity113
+#   ) %>%
+#   print(5)
+# 
+# xtsAustin <- as.matrix((df3), ncol=113)
+# xtsAustin_data <- t(xtsAustin)
+# 
+# head(xtsAustin_data)
+
+
+## Coerce data frame to array
+## In here we unlist a data frame by rows, not columns by using the transpose method, t(dataframe)
+Austin.array <- array(unlist(t(df3)), dim = c(113, 1, 1994))
+print(ts1.array[,,1])
+
+print(ts1.array[,,2])
+
+typeof(ts1.array[,,2])
+
+class(ts1.array[,,2])
+
+is.vector(ts1.array[,,2])
 
 # CLEAN UP #################################################
 
