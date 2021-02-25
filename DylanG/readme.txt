@@ -29,8 +29,7 @@ Enterobacteriaceae     35.928383   75.466742  118.428281
 Nocardiaceae           57.654975   34.186216 -437.536284
 mean                  -36.670005  -90.278105 -151.231112
 
-Execution time
-
+--Execution time--
 Input
 input file: Austin_data.csv
 Input file size: 4.48 MB
