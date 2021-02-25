@@ -30,8 +30,13 @@ df2 <- df %>%
   select(domain_tax:rep_prokMSAname, normalized_intensity1:normalized_intensity113
 ) %>%
   print(5)
-  
 
+# FLITER BY ONE VARIABLE ###################################
+
+# "out_id" is a identification number
+ts1 <- df2 %>%
+  filter(otu_id == 1040) %>%
+  print(1)
 
 
 # CLEAN UP #################################################
