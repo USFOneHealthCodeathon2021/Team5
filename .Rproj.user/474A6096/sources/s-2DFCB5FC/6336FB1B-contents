@@ -1,0 +1,26 @@
+# File:     Austin.R
+# Project:  Decode Human Breath Microbiomes
+# Reference source: Learning R taught by Dr. Poulson on Linked Learning 
+
+# INSTALL AND LOAD PACKAGES ################################
+
+# Install pacman ("package manager") if needed
+# If there is an error, you can refer to this online material: https://stackoverflow.com/questions/42807247/installing-package-cannot-open-file-permission-denied
+if (!require("pacman")) install.packages("pacman")
+
+# Load contributed packages with pacman
+pacman::p_load(pacman, party, rio, tidyverse)
+# pacman: for loading/unloading packages
+# party: for decision trees
+# rio: for importing data
+# tidyverse: for so many reasons
+
+# LOAD AND PREPARE DATA ############################################################################################################################################
+
+# Save data to "df" (for "data frame")
+# Rename outcome as "y" (if it helps)
+# Specify outcome with df$y
+
+# Import CSV files with readr::read_csv() from tidyverse
+(df <- read_csv("data/Austin_data.csv"))
+head(df)
