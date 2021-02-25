@@ -75,6 +75,9 @@ ts.ts1.stl = stl(ts.ts1, s.window= 21)
 
 plot(ts.ts1.stl)
 
+is.vector(ts.ts1.stl$time.series[,2])
+
+
 ts.ts2 <- ts(ts1.array[,,2], start=c(2003,2), end=c(2003,6), frequency=365)
 
 plot(ts.ts2)
@@ -89,8 +92,20 @@ is.ts(ts.ts1)
 ## a multiple time series with columns seasonal, trend and remainder
 ## extract the trend, put into into a result vector. Result vector would have 1994 elements.
 
+austin_trend_result = rep(0,113)
+
 for(i in 1:2){
-  print(ts1.array[,,i])
+  # Create a vector, size 113
+  trend_v = rep(0,113)
+  
+  # Create a daily time series in R from a numeric vector
+  
+  Austin.ts <- ts(ts.array[,,i], start=1, frequency=7)
+  
+  ts.ts1.stl = stl(ts.ts1, s.window= 21)
+  
+  # Populate an array here
+  
 }
   
 
