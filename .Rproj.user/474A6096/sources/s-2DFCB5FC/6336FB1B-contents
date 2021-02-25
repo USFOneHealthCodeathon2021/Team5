@@ -6,7 +6,7 @@
 
 # Install pacman ("package manager") if needed
 # If there is an error, you can refer to this online material: https://stackoverflow.com/questions/42807247/installing-package-cannot-open-file-permission-denied
-if (!require("pacman")) install.packages("pacman")
+# if (!require("pacman")) install.packages("pacman")
 
 # Load contributed packages with pacman
 pacman::p_load(pacman, party, rio, tidyverse)
@@ -24,3 +24,25 @@ pacman::p_load(pacman, party, rio, tidyverse)
 # Import CSV files with readr::read_csv() from tidyverse
 (df <- read_csv("data/Austin_data.csv"))
 head(df)
+
+# Create a reduce dataset containing only normalized least square variables only
+df2 <- df %>%
+  select(domain_tax:rep_prokMSAname, normalized_intensity1:normalized_intensity113
+) %>%
+  print(5)
+  
+
+
+
+# CLEAN UP #################################################
+
+# Clear environment
+rm(list = ls()) 
+
+# Clear packages
+p_unload(pacman, negate=TRUE)  # Remove all add-ons
+
+# Clear console
+cat("\014")  # ctrl+L
+
+
