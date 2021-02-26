@@ -51,3 +51,11 @@ DataFrame size (rows x cols) = 10 x 11
 Execution time mean: 3.29s
 Std dev: +/-0.0317s
 Number of runs: 10
+
+Scaling
+~Preliminary analysis indicates that this is linearly extensible 
+Justifiction: I increased the dataset by a factor of 3x for rows by copy/pasting the entire spreadsheet, appending it 3 times.
+	      For increasing columns, I copy/pasted just the normalized counts (right-side pasting).
+	      Both row and col pasting yielded almost identical results by inspecting the per-core and main core times.
+	      For both, STL times were ~0.4s-0.5s per core, total time was ~8s for both
+	      *NOTE: big cols had more variablity in per-core STL compute time (may be due to background processes)
