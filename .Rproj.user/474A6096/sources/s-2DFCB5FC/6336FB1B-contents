@@ -69,6 +69,38 @@ trend_matrix <- matrix(trend_v, nrow = nObservations, byrow = TRUE)
 
 dim(trend_matrix)
 
+# Step 2 ###########################################################
+
+prob_v = vector()
+
+N = 21
+
+
+for(i in 1:3){
+  dX = vector()
+  trend = trend_matrix[i, ] 
+  for(j in (nObservations - N + 1): nObservations){
+    dX[j - nObservations + N] = trend[j] - trend[j-1]
+  }
+  v0 <- var(dX)
+  sprintf('v0 =  %f', v0)
+  dXbar <- mean(dX)
+  sprintf('dXbar = %f', dXbar)
+  
+  posterior_mean <- v0/(1/(nObservations-1)+v0)*dXbar
+  
+  posterior_var <- 1/(1/v0 + N)
+  
+  sprintf('posterior_mean = %f', posterior_mean)
+  sprintf('posterior_var = %f', posterior_var)
+  
+  p1 <- pnorm(9, posterior_mean, posterior_var, lower.tail = FALSE)
+  p2 <- 1 - p1
+  
+  sprintf('p1 = %f', p1)
+  sprintf('p2 = %f', p2)
+  
+}
 
 # CLEAN UP #################################################
 
