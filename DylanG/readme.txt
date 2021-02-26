@@ -53,7 +53,7 @@ Std dev: +/-0.0317s
 Number of runs: 10
 
 Scaling
-~Preliminary analysis indicates that this is linearly extensible 
+~Preliminary analysis indicates that this is linearly scalable 
 Justifiction: I increased the dataset by a factor of 3x for rows by copy/pasting the entire spreadsheet, appending it 3 times.
 	      For increasing columns, I copy/pasted just the normalized counts (right-side pasting).
 	      Both row and col pasting yielded almost identical results by inspecting the per-core and main core times.
