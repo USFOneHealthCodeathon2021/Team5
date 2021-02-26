@@ -12,7 +12,9 @@ import time
 Handles generating the STL models and extracting residuals
 """
 class Outliers:
-	def __init__(self, path, norm_start=124, start_date='1-4-2003', freq="D", seasonal=21, robust=False, taxon_depth='taxa_string'):
+	def __init__(self, path, start_day, until_end=False, norm_start=124, start_date='1-4-2003', freq="D", seasonal=21, robust=False, taxon_depth='taxa_string'):
+		self.start_day = start_day
+		self.until_end = until_end
 		self.seasonal = seasonal
 		self.robust = robust
 		self.taxon_depth = taxon_depth
@@ -39,27 +41,24 @@ class Outliers:
 	"""
 	def gen_STL(self, series):
 		taxon = series[0]
-		bacteria = pd.Series(series[1:].values, index=self.index)
+		bacteria = pd.Series(series[1:], index=self.index)
 		stl = STL(bacteria, seasonal=self.seasonal, robust=self.robust)
 		model = stl.fit()
 		residuals = model.resid
 		residuals.name = taxon
-		return residuals
+		day_resids = self.__process_day_range(residuals, self.start_day, self.until_end)
+		return day_resids
 
 
-	def outliers(self, day, until_end=False, by=None, as_date=False, nlarge=5, nsmall=5):
-		day_resids = []
-		for i in range(len(self.norm)):
-			row = self.norm.iloc[i]
-			bacteria_sample = self.gen_STL(row)
-			day_sample = self.__process_day_range(bacteria_sample, day, until_end)
-			day_resids.append(day_sample)
-		day_frame = pd.DataFrame(day_resids).reset_index()
-		dates = self.__process_day_range(self.index, day, until_end)
-		day_frame.columns = self.__process_col_names(day, until_end, as_date)
-		return self.__get_outliers(day_frame, by, nlarge, nsmall)
-		# with Pool(8) as pool:
-		# 	result = pool.map(self.gen_STL, self.norm.itertuples(name=False))
+	def outliers(self, by=None, as_date=False, nlarge=5, nsmall=5):
+		if __name__ == "__main__":
+			with Pool(8) as pool:
+				day_resids = pool.map(self.gen_STL, self.norm.values.tolist())
+			pool.join()
+			day_frame = pd.DataFrame(day_resids).reset_index()
+			dates = self.__process_day_range(self.index, self.start_day, self.until_end)
+			day_frame.columns = self.__process_col_names(self.start_day, self.until_end, as_date)
+			return self.__get_outliers(day_frame, by, nlarge, nsmall)
 
 
 	def __process_day_range(self, container, day, until_end):
@@ -143,8 +142,10 @@ pd.set_option('display.max_columns', None)
 
 start = time.perf_counter()
 
-out = Outliers("../../Austin_data.csv")
-result = out.outliers(-2, until_end=True)
+out = Outliers("../../Austin_data.csv", -2, until_end=True)
+result = out.outliers()
 
 delta = time.perf_counter() - start
-print(f"Execution time: {delta:.5f}s")
+if __name__ == "__main__":
+	print(result)
+	print(f"Execution time: {delta:.5f}s")
