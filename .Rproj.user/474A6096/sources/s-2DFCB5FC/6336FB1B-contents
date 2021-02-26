@@ -4,6 +4,7 @@
 
 # INSTALL AND LOAD PACKAGES ################################
 library(xts)
+library(pacman)
 
 # Install pacman ("package manager") if needed
 # If there is an error, you can refer to this online material: https://stackoverflow.com/questions/42807247/installing-package-cannot-open-file-permission-denied
@@ -38,80 +39,22 @@ df2 <- df %>%
 df3 <- df2 %>%
     print(1)
 
-# # Import CSV files into xts object
-# 
-# df3 <- df %>%
-#   select(normalized_intensity1:normalized_intensity113
-#   ) %>%
-#   print(5)
-# 
-# xtsAustin <- as.matrix((df3), ncol=113)
-# xtsAustin_data <- t(xtsAustin)
-# 
-# head(xtsAustin_data)
+nTimeSeries = nrow(df3)
 
+nObservations = ncol(df3)
 
+#data.matrix <- matrix(df3, nrow = ncol(df3), ncol = nrow(df3) ,  byrow = TRUE)
+
+#dim(data.matrix)
+
+data.matrix[1,1]
 ## Coerce data frame to array
 ## In here we unlist a data frame by rows, not columns by using the transpose method, t(dataframe)
-Austin.array <- array(unlist(t(df3)), dim = c(113, 1, 1994))
-
-print(ts1.array[,,1])
-
-print(ts1.array[,,2])
-
-typeof(ts1.array[,,2])
-
-class(ts1.array[,,2])
-
-is.vector(ts1.array[,,2])
-
-# Create a daily time series in R from a numeric vector
-
-ts.ts1 <- ts(ts1.array[,,1], start=1, frequency=7)
-
-plot(ts.ts1)
-
-ts.ts1.stl = stl(ts.ts1, s.window= 21)
-
-plot(ts.ts1.stl)
-
-is.ts(ts.ts1.stl$time.series[,2])
-
-###############################
-
-ts.ts2 <- ts(ts1.array[,,2], start=1, frequency=7)
-
-ts.ts2.stl = stl(ts.ts2, s.window= 21)
-
-multiple_trend_vector <- c(ts.ts1.stl$time.series[,2])
-
-multiple_trend_vector <- c(multiple_trend_vector, ts.ts2.stl$time.series[,2])
-
-length(multiple_trend_vector)
-
-
-#dim(multiple_trend_vector) <-c(2, 113)
-
-#multiple_trend_vector
-
-trend_matrix <- matrix(multiple_trend_vector, nrow = 2, byrow = TRUE)
-
-trend_matrix
-
-dim(trend_matrix)
-
-
-
-## for each time serie:
- ## convert it into a xts class 
- ## pass it into stl method
- ## I would have returns an object of class "stl" with components time.series
-## a multiple time series with columns seasonal, trend and remainder
-## extract the trend, put into into a result vector. Result vector would have 1994 elements.
+Austin.array <- array(unlist(t(df3)), dim = c(nObservations, 1, nTimeSeries))
 
 trend_v = vector()
 
-for(i in 1:3){
+for(i in 1:nTimeSeries){
   
   # Create a daily time series in R from a numeric vector
   
@@ -120,10 +63,9 @@ for(i in 1:3){
   Austin.ts.stl = stl(Austin.ts, s.window= 21)
   
   trend_v <- c(trend_v, Austin.ts.stl$time.series[,2])
-  
 }
 
-trend_matrix <- matrix(trend_v, nrow = 3, byrow = TRUE)
+trend_matrix <- matrix(trend_v, nrow = nObservations, byrow = TRUE)
 
 dim(trend_matrix)
 
