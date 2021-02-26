@@ -75,15 +75,32 @@ ts.ts1.stl = stl(ts.ts1, s.window= 21)
 
 plot(ts.ts1.stl)
 
-is.vector(ts.ts1.stl$time.series[,2])
+is.ts(ts.ts1.stl$time.series[,2])
+
+###############################
+
+ts.ts2 <- ts(ts1.array[,,2], start=1, frequency=7)
+
+ts.ts2.stl = stl(ts.ts2, s.window= 21)
+
+multiple_trend_vector <- c(ts.ts1.stl$time.series[,2])
+
+multiple_trend_vector <- c(multiple_trend_vector, ts.ts2.stl$time.series[,2])
+
+length(multiple_trend_vector)
 
 
-ts.ts2 <- ts(ts1.array[,,2], start=c(2003,2), end=c(2003,6), frequency=365)
+#dim(multiple_trend_vector) <-c(2, 113)
 
-plot(ts.ts2)
+#multiple_trend_vector
 
-is.ts(ts.ts1)
-## Create an xts object#
+trend_matrix <- matrix(multiple_trend_vector, nrow = 2, byrow = TRUE)
+
+trend_matrix
+
+dim(trend_matrix)
+
+
 
 ## for each time serie:
  ## convert it into a xts class 
@@ -92,22 +109,24 @@ is.ts(ts.ts1)
 ## a multiple time series with columns seasonal, trend and remainder
 ## extract the trend, put into into a result vector. Result vector would have 1994 elements.
 
-austin_trend_result = rep(0,113)
+trend_v = vector()
 
-for(i in 1:2){
-  # Create a vector, size 113
-  trend_v = rep(0,113)
+for(i in 1:3){
   
   # Create a daily time series in R from a numeric vector
   
-  Austin.ts <- ts(ts.array[,,i], start=1, frequency=7)
+  Austin.ts <- ts(Austin.array [,,i], start=1, frequency=7)
   
-  ts.ts1.stl = stl(ts.ts1, s.window= 21)
+  Austin.ts.stl = stl(Austin.ts, s.window= 21)
   
-  # Populate an array here
+  trend_v <- c(trend_v, Austin.ts.stl$time.series[,2])
   
 }
-  
+
+trend_matrix <- matrix(trend_v, nrow = 3, byrow = TRUE)
+
+dim(trend_matrix)
+
 
 # CLEAN UP #################################################
 
