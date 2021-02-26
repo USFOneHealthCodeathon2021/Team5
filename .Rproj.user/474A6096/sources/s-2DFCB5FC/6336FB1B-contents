@@ -76,9 +76,9 @@ prob_v = vector()
 N = 21
 
 
-for(i in 1:3){
+for(i in 1:nTimeSeries){
   dX = vector()
-  trend = trend_matrix[i, ] 
+  trend = trend_matrix[, i] 
   for(j in (nObservations - N + 1): nObservations){
     dX[j - nObservations + N] = trend[j] - trend[j-1]
   }
@@ -97,10 +97,18 @@ for(i in 1:3){
   p1 <- pnorm(9, posterior_mean, posterior_var, lower.tail = FALSE)
   p2 <- 1 - p1
   
+  prob_v = c(prob_v, p1, p2)
+  
   #print(p1)
   #print(p2)
   
 }
+
+length(prob_v)
+
+prob_matrix <- matrix(prob_v, nrow = 2, byrow = TRUE)
+
+dim(prob_matrix)
 
 # CLEAN UP #################################################
 
