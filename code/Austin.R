@@ -83,22 +83,22 @@ for(i in 1:3){
     dX[j - nObservations + N] = trend[j] - trend[j-1]
   }
   v0 <- var(dX)
-  sprintf('v0 =  %f', v0)
+  #print(v0)
   dXbar <- mean(dX)
-  sprintf('dXbar = %f', dXbar)
+  #print(dXbar)
   
   posterior_mean <- v0/(1/(nObservations-1)+v0)*dXbar
   
   posterior_var <- 1/(1/v0 + N)
   
-  sprintf('posterior_mean = %f', posterior_mean)
-  sprintf('posterior_var = %f', posterior_var)
+  #print(posterior_mean)
+  #print(posterior_var)
   
   p1 <- pnorm(9, posterior_mean, posterior_var, lower.tail = FALSE)
   p2 <- 1 - p1
   
-  sprintf('p1 = %f', p1)
-  sprintf('p2 = %f', p2)
+  #print(p1)
+  #print(p2)
   
 }
 
