@@ -4,7 +4,8 @@ aus<-as.matrix(data.frame(au[,c(125:237)],colnames=au$otu_id))
 ## dim(aus)
 ## N=21 T=114
 pp<-c()
-for (x in 1:1993) {
+for (x in 1:1993) 
+{
   t<-ts(as.vector(aus[x,]),frequency=7,start=1)
   sta<-stl(t,s.window = 21)
   trend<-as.vector(sta$time.series[,2])
