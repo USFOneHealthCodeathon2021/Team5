@@ -53,6 +53,8 @@ data.matrix[1,1]
 Austin.array <- array(unlist(t(df3)), dim = c(nObservations, 1, nTimeSeries))
 
 trend_v = vector()
+p1_v = vector()
+p2_v = vector()
 
 for(i in 1:nTimeSeries){
   
@@ -60,55 +62,64 @@ for(i in 1:nTimeSeries){
   
   Austin.ts <- ts(Austin.array [,,i], start=1, frequency=7)
   
-  Austin.ts.stl = stl(Austin.ts, s.window= 21)
+  Austin.ts.stl = stl(Austin.ts, s.window= 30)
   
-  trend_v <- c(trend_v, Austin.ts.stl$time.series[,2])
-}
+  trend <- Austin.ts.stl$time.series[,2]
 
-trend_matrix <- matrix(trend_v, nrow = nObservations, byrow = TRUE)
-
-dim(trend_matrix)
-
-# Step 2 ###########################################################
-
-prob_v = vector()
-
-N = 21
-
-
-for(i in 1:nTimeSeries){
+  # Step 2 ###########################################################
+  N = 30
   dX = vector()
-  trend = trend_matrix[, i] 
   for(j in (nObservations - N + 1): nObservations){
     dX[j - nObservations + N] = trend[j] - trend[j-1]
   }
-  v0 <- var(dX)
+  v = var(dX)/2
+  v0 <- var(dX)/2
   #print(v0)
   dXbar <- mean(dX)
   #print(dXbar)
   
   posterior_mean <- v0/(1/(nObservations-1)+v0)*dXbar
   
-  posterior_var <- 1/(1/v0 + N)
+  posterior_var <- 1/(1/v0 + N/v)
   
   #print(posterior_mean)
   #print(posterior_var)
   
-  p1 <- pnorm(9, posterior_mean, posterior_var, lower.tail = FALSE)
+  p1 <- pnorm(0, posterior_mean, sqrt(posterior_var), lower.tail = FALSE)
   p2 <- 1 - p1
   
-  prob_v = c(prob_v, p1, p2)
-  
-  #print(p1)
-  #print(p2)
+  p1_v = c(p1_v, p1)
+  p2_v = c(p2_v, p2)
   
 }
 
-length(prob_v)
 
-prob_matrix <- matrix(prob_v, nrow = 2, byrow = TRUE)
+# sort by p1 and p2
+p1_order = order(p1_v, decreasing = TRUE)
+p2_order = order(p2_v, decreasing = TRUE)
+# print names of top 5 p1
+names = df$taxa_string
+Austin.ts <- tail(ts(Austin.array [,,p1_order[1]], start=1, frequency=7), 30)
+plot(Austin.ts, ylab = "normalized intensity", xlab = "last 30 days", type = 'l', main = names[p1_order[1]])
+Austin.ts <- tail(ts(Austin.array [,,p1_order[2]], start=1, frequency=7), 30)
+plot(Austin.ts, ylab = "normalized intensity", xlab = "last 30 days", type = 'l', main = names[p1_order[2]])
+Austin.ts <- tail(ts(Austin.array [,,p1_order[3]], start=1, frequency=7), 30)
+plot(Austin.ts, ylab = "normalized intensity", xlab = "last 30 days", type = 'l', main = names[p1_order[3]])
 
-dim(prob_matrix)
+
+# top 5 p2
+Austin.ts <- tail(ts(Austin.array [,,p2_order[1]], start=1, frequency=7), 30)
+plot(Austin.ts, ylab = "normalized intensity", xlab = "last 30 days", type = 'l', main = names[p2_order[1]])
+Austin.ts <- tail(ts(Austin.array [,,p2_order[2]], start=1, frequency=7), 30)
+plot(Austin.ts, ylab = "normalized intensity", xlab = "last 30 days", type = 'l', main = names[p2_order[2]])
+Austin.ts <- tail(ts(Austin.array [,,p2_order[3]], start=1, frequency=7), 30)
+plot(Austin.ts, ylab = "normalized intensity", xlab = "last 30 days", type = 'l', main = names[p2_order[3]])
+
+names[p1_order[2]]
+names[p1_order[3]]
+
+
+
 
 # CLEAN UP #################################################
 
@@ -119,6 +130,6 @@ rm(list = ls())
 p_unload(pacman, negate=TRUE)  # Remove all add-ons
 
 # Clear console
-cat("\014")  # ctrl+L
+cat("\030")  # ctrl+L
 
 
