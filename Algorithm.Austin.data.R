@@ -1,7 +1,7 @@
 au<-read.csv("Austin_data.csv",header = T)
-aus<-data.frame(au[,c(125:237)],colnames=au$otu_id)
-aus<-as.matrix(aus)
-dt<-matrix(dt<-list())
+aus<-as.matrix(data.frame(au[,c(125:237)],colnames=au$otu_id))
+## dim(aus)
+## N=21 T=114
 pp<-c()
 for (x in 1:1993) {
   t<-ts(as.vector(aus[x,]),frequency=7,start=1)
@@ -16,6 +16,7 @@ for (x in 1:1993) {
   p2 = 1 - p1
   pp=cbind(pp,p1,p2)
 } 
-p=matrix(pp,ncol = 2)
-#dim(dt)
-## N=21 T=114
+p=matrix(pp,ncol = 2,)
+colnames(p)<-c("p1","p2")
+p
+
