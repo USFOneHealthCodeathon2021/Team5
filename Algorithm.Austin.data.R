@@ -1,4 +1,4 @@
-## Discoving Trends by Time Series Decomposition Tools
+## Discoving Trends by Time Series Decomposition Tools ##
 au<-read.csv("Austin_data.csv",header = T)
 aus<-as.matrix(data.frame(au[,c(125:237)],colnames=au$otu_id))
 ## dim(aus)
@@ -22,3 +22,4 @@ p=matrix(pp,ncol = 2,)
 colnames(p)<-c("p1","p2")
 p
 
+## Andy Pang ##
