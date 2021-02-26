@@ -4,6 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from pandas.plotting import register_matplotlib_converters
 from statsmodels.tsa.seasonal import STL
+from multiprocessing import Pool
 import time
 
 
@@ -11,10 +12,14 @@ import time
 Handles generating the STL models and extracting residuals
 """
 class Outliers:
-	def __init__(self, path, norm_start=124, start_date='1-4-2003', freq="D"):
-		self.df = pd.read_csv(path)		
-		self.norm = self.df[self.df.columns[norm_start:]]
-		self.index = pd.date_range(start_date, periods=self.norm.shape[1], freq=freq)
+	def __init__(self, path, norm_start=124, start_date='1-4-2003', freq="D", seasonal=21, robust=False, taxon_depth='taxa_string'):
+		self.seasonal = seasonal
+		self.robust = robust
+		self.taxon_depth = taxon_depth
+		self.df = pd.read_csv(path)
+		self.freq = freq
+		self.norm = pd.concat([self.df[taxon_depth], self.df[self.df.columns[norm_start:]]], axis=1)
+		self.index = pd.date_range(start_date, periods=self.norm.shape[1]-1, freq=freq)
 
 
 	"""
@@ -32,80 +37,98 @@ class Outliers:
 		A series showing the remainder for bacterial signatures in row=iloc at dates start_date:end_date.
 		Series has name=bacteria (to the defined taxon_depth) and, if with_date=True, indexed according to date
 	"""
-	def get_day(self, iloc, day_start, day_end=None, seasonal=7, robust=False, taxon_depth='family_tax', with_date=True):
-		if day_start == ":":
-			day_start = 0
-		if day_end == ":":
-			day_end = self.norm.shape[1]
-		taxon = self.df[taxon_depth].iloc[iloc]
-		bacteria = pd.Series(self.norm.iloc[iloc].values, index=self.index, name=taxon)
-		stl = STL(bacteria, seasonal=seasonal, robust=robust)
+	def gen_STL(self, series):
+		taxon = series[0]
+		bacteria = pd.Series(series[1:].values, index=self.index)
+		stl = STL(bacteria, seasonal=self.seasonal, robust=self.robust)
 		model = stl.fit()
 		residuals = model.resid
 		residuals.name = taxon
-		if day_end:
-			day_resid = residuals[day_start:day_end]
-		else:
-			day_resid = residuals[day_start:day_start+1]
-		if not with_date:
-			day_resid = day_resid.reset_index(drop=True)
-		return day_resid
+		return residuals
 
 
-	"""
-	Summary:
-		Generate STLs for an entire dataset (using get_day), obtaining the decomposed remainder(s) for a given bacteria based from day_start to day_end
-	Parameters:
-		day_start = day to begin grabbing from (0 indexed, follows Python indexing)
-		day_end = day to end grabbing at. If None, just grab the day at day_start (0 indexed, follows Python indexing)
-		seasonal = STL seasonal window size
-		robust = STL robust
-		taxon_depth = taxon to use for reporting
-		smallest = number of smallest bacterial remainders to grab for each day
-		largest = number of largest bacterial remainders to grab for each day
-		avg_flag = append the average value for each day to the final dataframe
-	returns:
-		A dataframe where rows are the dates and indices are the bacteria (given based on taxon_depth). Each cell indicates the remainder for a specific bacteria (index)
-		based on a specific day (column). Averages can optionally be added and are calculated based on the values within a column.
-	"""
-	def all_outliers(self, day_start, day_end=None, seasonal=7, robust=False, taxon_depth='family_tax', smallest=5, largest=5, avg_flag=False):
-		if day_start == ":":
-			day_start = 0
-		if day_end == ":":
-			day_end = self.norm.shape[1]
-		cols = self.index[day_start:day_end]
-		cols = [str(date) for date in cols.date]
-		resid_mat = np.zeros([len(self.df), len(cols)])
-		index = []
+	def outliers(self, day, until_end=False, by=None, as_date=False, nlarge=5, nsmall=5):
+		day_resids = []
 		for i in range(len(self.norm)):
-			day_i_resids = self.get_day(i, day_start, day_end, seasonal, robust, taxon_depth, False)
-			index.append(day_i_resids.name)
-			resid_mat[i, :] = day_i_resids
-		resid_df = pd.DataFrame(resid_mat, index=index)
-		resid_df.sort_values(by=[i for i in range(len(cols))], inplace=True)
-		resid_df.columns = cols
-		largest = resid_df.iloc[-largest:]
-		smallest = resid_df.iloc[:smallest]
-		avgs = resid_df.mean()
-		outliers = pd.concat([smallest, largest])
-		if avg_flag:
-			outliers.loc["mean"] = avgs 
-		return outliers
+			row = self.norm.iloc[i]
+			bacteria_sample = self.gen_STL(row)
+			day_sample = self.__process_day_range(bacteria_sample, day, until_end)
+			day_resids.append(day_sample)
+		day_frame = pd.DataFrame(day_resids).reset_index()
+		dates = self.__process_day_range(self.index, day, until_end)
+		day_frame.columns = self.__process_col_names(day, until_end, as_date)
+		return self.__get_outliers(day_frame, by, nlarge, nsmall)
+		# with Pool(8) as pool:
+		# 	result = pool.map(self.gen_STL, self.norm.itertuples(name=False))
+
+
+	def __process_day_range(self, container, day, until_end):
+		if until_end or day == -1:
+			return container[day:]
+		else:
+			return container[day:day+1]
+
+
+	def __process_col_names(self, day, until_end, as_date):
+		freq_key = {
+			"D": "day",
+			"W": "week",
+			"M": "month",
+			"Y": "year"
+		}
+		if as_date:
+			dates = self.__process_day_range(self.index, day, until_end)
+			col_names = [str(date) for date in dates.date]
+		else:
+			total_len = len(self.norm.columns)
+			sub_len = len(self.__process_day_range(self.norm.columns, day, until_end))
+			start = total_len - sub_len
+			col_names = [f"{freq_key[self.freq]}_{i}" for i in range(start, total_len)]
+		return ["taxon"] + col_names
+
+
+	def __get_outliers(self, day_frame, by, nlarge, nsmall):
+		if not by:
+			by = -1
+		sort_col = day_frame.columns[by]
+		largest = day_frame.nlargest(nlarge, sort_col)
+		smallest = day_frame.nsmallest(nsmall, sort_col)
+		return pd.concat([smallest, largest])
 
 
 	"""
 	Convenience STL plotting. Optionally overide the object frequency
 	"""
-	def plot(self, iloc, seasonal=7, freq=None, robust=False, taxon_depth='family_tax'):
+	def plot(self, iloc, freq=None):
 		index = self.index
-		taxon = self.df[taxon_depth].iloc[iloc]
+		taxon = self.df[self.taxon_depth].iloc[iloc]
 		if freq:
 			index = pd.date_range(self.index.values[0], periods=self.norm.shape[1], freq=freq)
 		bacteria = pd.Series(self.norm.iloc[iloc].values, index=index, name=taxon)
-		stl = STL(bacteria, seasonal=seasonal, robust=robust)
+		stl = STL(bacteria, seasonal=self.seasonal, robust=self.robust)
 		model = stl.fit()
 		fig = model.plot()
 		plt.show()
+
+
+	def plot_processed(self, processed_row, save_mode=False):
+		taxon = processed_row["taxon"]
+		row_i = self.df[self.df[self.taxon_depth] == taxon].index.values[0]
+		bacteria = pd.Series(self.norm.loc[row_i].values[1:], index=self.index.values, name=taxon)
+		stl = STL(bacteria, seasonal=self.seasonal)
+		model = stl.fit()
+		fig = model.plot()
+		if not save_mode:
+			plt.show()
+		
+
+	def save_processed_figs(self, processed):
+		for i in range(len(processed)):
+			row = processed.iloc[i]
+			fname = f"{i+1}.png"
+			print(f"Saving {row['taxon']} as {fname} [{row['residual']}]")
+			self.plot_processed(row, True)
+			plt.savefig(fname)
 
 
 #Plot setup for pretty output
@@ -114,10 +137,14 @@ sns.set_style('darkgrid')
 plt.rc('figure', figsize=(16, 12))
 plt.rc('font', size=13)
 
+
+pd.set_option('display.max_columns', None)
+
+
 start = time.perf_counter()
+
 out = Outliers("../../Austin_data.csv")
-result = out.all_outliers(":", seasonal=21, avg_flag=True)
-print(result)
-print(result.shape)
+result = out.outliers(-2, until_end=True)
+
 delta = time.perf_counter() - start
 print(f"Execution time: {delta:.5f}s")
