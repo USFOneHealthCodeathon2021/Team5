@@ -130,10 +130,22 @@ class Outliers:
 	def __get_outliers(self, day_frame, by, nlarge, nsmall):
 		if not by:
 			by = -1
+		self.by = by
+		self.nlarge = nlarge
+		self.nsmall = nsmall
 		sort_col = day_frame.columns[by]
 		largest = day_frame.nlargest(nlarge, sort_col)
 		smallest = day_frame.nsmallest(nsmall, sort_col)
 		return pd.concat([smallest, largest])
+
+
+	def split_processed(self, processed, small_ascend=True, large_ascend=True):
+		small = processed[:self.nsmall]
+		small = small.sort_values(by=small.columns[self.by], ascending=small_ascend)
+		large = processed[self.nsmall:]
+		large = large.sort_values(by=large.columns[self.by], ascending=large_ascend)
+		return small, large
+
 
 
 	"""
@@ -190,21 +202,43 @@ class Outliers:
 		Saves all rows in the output of self.outliers() as PNGs
 	Parameters:
 		processed [pd.DataFrame] = Dataframe output from self.outliers()
-		by [int, default None] = Set this to whatever was used for "by" parameter in self.outliers()
+		output_dir [str, default None] = Output directory to save images in (do not add a trailing slash)
+		small_ascend [bool, default True] = If the nsmall smallest outliers should be saved in ascending or descending order
+		large_ascend [bool, default True] = If the nlarge largest outliers should be saved in ascending or descending order
+		ftype [str, default svg] = Filetype to save the images as (e.g. svg, png, jpg)
+		dpi [int, default 1200] = Image pixel density in dots per inch (higher means sharper image)
 	Return:
-		None, saves all rows as i.png (where 1.png is the lowest outlier, ascending until nsmall, and the remaining
-		images from nsmall+1 onward, are the high outliers in descending order)
+		None, saves all outliers in ascending/descending order. Smallest outliers are saved as "low_n.ftype", where "low_1.ftype"
+		represents the highest (descending) or lowest (ascending) small outlier. Similarly, saves the highest outliers as
+		"high_n.ftype" where "high_1.ftype" is the highest (descending) or lowest (ascending) large outlier. The STL from
+		ALL time points, not just from start_day, is generated through plot_processed.
 	"""
-	def save_processed_figs(self, processed, by=None, ftype="svg", dpi=1200):
-		if not by:
-			by = -1
-		resid_col = processed.columns.values[by]
-		for i in range(len(processed)):
-			row = processed.iloc[i]
-			fname = f"{i+1}.{ftype}"
+	def save_processed_figs(self, processed, output_dir=None, small_ascend=True, large_ascend=True, ftype="svg", dpi=1200):
+		resid_col = processed.columns.values[self.by]
+		small, large = self.split_processed(processed, small_ascend=small_ascend, large_ascend=large_ascend)
+		print(f"Saving {self.nsmall} lowest outliers in {'ascending' if small_ascend else 'descending'} order...")
+		for i in range(small.shape[0]):
+			row = small.iloc[i]
+			fname = f"low_{i+1}.{ftype}"
+			if output_dir:
+				fname = f"{output_dir}/{fname}"
 			print(f"Saving {row['taxon']} as {fname} [{row[resid_col]}]")
 			self.plot_processed(row, True)
 			plt.savefig(fname, format=ftype, dpi=dpi)
+		
+		print("Done!\n")
+		print(f"Saving {self.nlarge} highest outliers in {'ascending' if small_ascend else 'descending'} order...")
+		
+		for i in range(large.shape[0]):
+			row = large.iloc[i]
+			fname = f"high_{i+1}.{ftype}"
+			if output_dir:
+				fname = f"{output_dir}/{fname}"
+			print(f"Saving {row['taxon']} as {fname} [{row[resid_col]}]")
+			self.plot_processed(row, True)
+			plt.savefig(fname, format=ftype, dpi=dpi)
+
+		print("Done!")
 
 
 #Plot setup for pretty output
@@ -214,22 +248,18 @@ plt.rc('figure', figsize=(16, 12))
 plt.rc('font', size=13)
 
 
-# Execution object instantiation/outlier extraction can be placed here, e.g.
-# out = Outliers(csv_path, -2, until_end=True)
-# result = out.outliers()
 
-# start = time.perf_counter()
-# csv_path = "../../austin.csv"
-# out = Outliers(csv_path, -2, until_end=True)
-# result = out.outliers(cores=11)
-# delta = time.perf_counter() - start
-# print(f"{delta:.5f}", end=",")
+# It is recommended that using this class is wrapped in an if statement to ensure
+# that the executing namespace is __main__. An example use placed in this block is as follows:
+# out = Outliers("../../Austin_data.csv", start_day=-5, until_end=True)
 
-# It is highly recommended to put final outputting steps (printing,
-# writing to files, graphing) here to avoid unexpected results or
-# errors caused by parallel Pool() processes that finish before
-# all data is processed.
+# out = Outliers("../../Austin_data.csv", start_day=-5, until_end=True)
+# outliers = out.outliers()
+# outliers.to_csv("../Figures/outliers.csv", index=False)
+# out.save_processed_figs(outliers, small_ascend=False, output_dir="../Figures/STLs")
+
+# This grabs the 5 highest/lowest outliers by the last day, stores the last 5 days of
+# data in a DataFrame, saves this to a CSV, and then saves the entire STLs corresponding
+# to these outliers as SVG files (all files saved to a Figures directory).
 if __name__ == "__main__":
-	out = Outliers("../../Austin_data.csv", start_day=-5, until_end=True)
-	outliers = out.outliers()
-	out.save_processed_figs(outliers)
+	pass
