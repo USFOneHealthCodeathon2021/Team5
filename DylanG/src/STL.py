@@ -84,7 +84,6 @@ class Outliers:
 				cores = mp.cpu_count()
 			with Pool(cores) as pool:
 				day_resids = pool.map(self.gen_STL, self.norm.values.tolist())
-			pool.join()
 			day_frame = pd.DataFrame(day_resids).reset_index()
 			dates = self.__process_day_range(self.index, self.start_day, self.until_end)
 			day_frame.columns = self.__process_col_names(self.start_day, self.until_end, as_date)
@@ -92,7 +91,7 @@ class Outliers:
 
 
 	"""
-	Conveniene method to process the start_day/until day notation
+	Convenience method to process the start_day/until day notation
 	"""
 	def __process_day_range(self, container, day, until_end):
 		if until_end or day == -1:
@@ -196,16 +195,16 @@ class Outliers:
 		None, saves all rows as i.png (where 1.png is the lowest outlier, ascending until nsmall, and the remaining
 		images from nsmall+1 onward, are the high outliers in descending order)
 	"""
-	def save_processed_figs(self, processed, by=None):
+	def save_processed_figs(self, processed, by=None, ftype="svg", dpi=1200):
 		if not by:
 			by = -1
 		resid_col = processed.columns.values[by]
 		for i in range(len(processed)):
 			row = processed.iloc[i]
-			fname = f"{i+1}.png"
+			fname = f"{i+1}.{ftype}"
 			print(f"Saving {row['taxon']} as {fname} [{row[resid_col]}]")
 			self.plot_processed(row, True)
-			plt.savefig(fname)
+			plt.savefig(fname, format=ftype, dpi=dpi)
 
 
 #Plot setup for pretty output
@@ -219,11 +218,18 @@ plt.rc('font', size=13)
 # out = Outliers(csv_path, -2, until_end=True)
 # result = out.outliers()
 
-
+# start = time.perf_counter()
+# csv_path = "../../austin.csv"
+# out = Outliers(csv_path, -2, until_end=True)
+# result = out.outliers(cores=11)
+# delta = time.perf_counter() - start
+# print(f"{delta:.5f}", end=",")
 
 # It is highly recommended to put final outputting steps (printing,
 # writing to files, graphing) here to avoid unexpected results or
 # errors caused by parallel Pool() processes that finish before
 # all data is processed.
 if __name__ == "__main__":
-	pass
+	out = Outliers("../../Austin_data.csv", start_day=-5, until_end=True)
+	outliers = out.outliers()
+	out.save_processed_figs(outliers)

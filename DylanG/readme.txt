@@ -30,21 +30,23 @@ Usage
 160   Bacteria;Actinobacteria;Actinobacteria;Actinomycetales;Micrococcaceae;sf_1;1529             -2.261048    23.687304   55.386548 
 599   Bacteria;Firmicutes;Bacilli;Bacillales;Bacillaceae;sf_1;3715                                 7.121895    24.181345   42.686451 
 
---Execution time--
+--Execution Times--
+
+AUSTIN DATASET RUNS
+Hardware
+Computer: Asus G14
+CPU: Ryzen 9 4900HS (16 logical cores, 3.00 GHz boost up to 4.20 GHz)
+RAM: 16 GB
+Storage: 1 TB m.2 NVMe SSD
+OS: Windows 10
+
 Input
 input file: Austin_data.csv
 Input file size: 4.48 MB
 Input file rows x cols: 1994 x 237
 Input file processed rows x cols: 1993 x 113
-Outliers instantiation: Outliers("../../Austin_data.csv", -10, until_end=True)
-all_outliers call: outliers_obj.outliers()
-Execution time function: time.perf_counter()
+Cores used: 16
 
-Hardware
-Computer: Asus G14
-CPU: Ryzen 9 4900HS (16 logical cores, 3.00 GHz boost up to 4.20 GHz)
-RAM: 16 GB
-Drive: 1 TB m.2 NVMe SSD
 
 Output
 DataFrame size (rows x cols) = 10 x 11
@@ -52,10 +54,31 @@ Execution time mean: 3.29s
 Std dev: +/-0.0317s
 Number of runs: 10
 
+TOY DATASETS
+--Hardware--
+CPU: Intel i7 6700k (4.00 GHz, 8 cores
+RAM: 16 GB
+Storage: 1 TB SSD, 860 Evo (SATA III)
+OS: Ubuntu 20.04.2 LTS 
+
+Dataset shape: (1000, 114)
+Execution time: 0.58643s
+
+Dataset shape: (10000, 114)
+Execution time: 5.49958s
+
+Dataset shape: (100000, 114)
+Execution time: 56.08910s
+
 Scaling
 ~Preliminary analysis indicates that this is linearly scalable 
-Justifiction: I increased the dataset by a factor of 3x for rows by copy/pasting the entire spreadsheet, appending it 3 times.
-	      For increasing columns, I copy/pasted just the normalized counts (right-side pasting).
-	      Both row and col pasting yielded almost identical results by inspecting the per-core and main core times.
-	      For both, STL times were ~0.4s-0.5s per core, total time was ~8s for both
-	      *NOTE: big cols had more variablity in per-core STL compute time (may be due to background processes)
+Initial justifiction: 	I increased the dataset by a factor of 3x for rows by copy/pasting the entire spreadsheet, appending it 3 times.
+				For increasing columns, I copy/pasted just the normalized counts (right-side pasting).
+				Both row and col pasting yielded almost identical results by inspecting the per-core and main core times.
+				For both, STL times were ~0.4s-0.5s per core, total time was ~8s for both
+				*NOTE: big cols had more variablity in per-core STL compute time (may be due to background processes)
+
+Further Justification:	Looking at the toy dataset times, scaling is ~linear, with each 10x increase in OTUs (rows) increasing compute time
+						by ~10x. Going from 10000 to 100000 shows a slightly above linear time increase, though it is roughly negligible.
+						However, going from 100000 to 1 billion OTUs may make this increase more than linear, may be a result of loading
+						the df with pd.read_csv.
